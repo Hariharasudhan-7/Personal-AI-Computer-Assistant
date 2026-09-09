@@ -1,0 +1,36 @@
+# Shared dependencies for the frontend and backend services
+
+# Frontend
+streamlit>=1.36
+
+# File automation
+openai>=1.40.0
+pypdf>=5.0.0
+
+# Online web search
+pydantic>=2.8.0,<3.0.0
+google-genai>=1.0.0,<2.0.0
+ddgs>=9.0.0,<10.0.0
+protobuf>=5.26.1,<6.0.0
+
+# RAG pipeline
+langchain
+langchain-core
+langchain-community
+langchain-classic
+langchain-text-splitters
+langchain-huggingface
+langchain-google-genai
+langchain-ollama
+faiss-cpu
+sentence-transformers
+torchvision
+pymupdf
+pymupdf4llm
+Pillow
+rank_bm25
+
+# Shared development utilities
+httpx>=0.27.0,<1.0.0
+python-dotenv>=1.0.1
+pytest>=8.2.0

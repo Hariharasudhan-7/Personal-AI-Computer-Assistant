@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: transparent; font-family: monospace; }
+    button { width: 100%; height: 54px; border: 1px solid #087a94; border-radius: 3px; background: #031219; color: #b9fbff; font-size: 22px; cursor: pointer; }
+    button.listening { border-color: #63ef9b; color: #63ef9b; box-shadow: 0 0 18px rgba(99,239,155,.75); animation: pulse .55s ease-in-out infinite alternate; }
+    @keyframes pulse { to { transform: scale(1.06); box-shadow: 0 0 28px rgba(99,239,155,.95); } }
+  </style>
+</head>
+<body>
+  <button id="mic" title="Speak a command" aria-label="Speak a command">🎙</button>
+  <script>
+    const button = document.getElementById('mic');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let listening = false;
+
+    function sendMessage(type, data = {}) {
+      window.parent.postMessage({ isStreamlitMessage: true, type, ...data }, '*');
+    }
+    function setFrameHeight() { sendMessage('streamlit:setFrameHeight', { height: 54 }); }
+    sendMessage('streamlit:componentReady', { apiVersion: 1 });
+    setFrameHeight();
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+      if (data.type === 'streamlit:render' && data.args && data.args.stop_listening !== undefined) {
+        listening = false;
+        if (recognition) recognition.stop();
+      }
+    });
+
+    if (!SpeechRecognition) {
+      button.title = 'Speech recognition is not supported in this browser';
+      button.textContent = '🎙';
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      button.addEventListener('click', () => {
+        if (!button.classList.contains('listening')) {
+          listening = true;
+          recognition.start();
+        }
+      });
+      recognition.onstart = () => {
+        listening = true;
+        button.classList.add('listening');
+        button.textContent = '●';
+        button.title = 'Listening...';
+      };
+      recognition.onend = () => {
+        if (listening) {
+          window.setTimeout(() => recognition.start(), 120);
+          return;
+        }
+        button.classList.remove('listening');
+        button.textContent = '🎙';
+        button.title = 'Speak a command';
+      };
+      recognition.onerror = () => recognition.onend();
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript) sendMessage('streamlit:setComponentValue', { value: transcript });
+      };
+    }
+  </script>
+</body>
+</html>
